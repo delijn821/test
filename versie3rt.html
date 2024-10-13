@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>De Lijn Realtime Data</title>
+    <script>
+        async function fetchRealtimeData() {
+            try {
+                const response = await fetch("https://api.delijn.be/gtfs/v3/realtime", {
+                    method: "GET",
+                    headers: {
+                        "Cache-Control": "no-cache",
+                        "Ocp-Apim-Subscription-Key": "24668cab5bac4d27bfafe5013a8fab3b"
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Error: ${response.status}`);
+                }
+
+                const data = await response.json();
+                saveJsonToFile(data);
+            } catch (error) {
+                console.error('Failed to fetch data', error);
+            }
+        }
+
+        function saveJsonToFile(data) {
+            const json = JSON.stringify(data, null, 2);
+            const blob = new Blob([json], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'realtime_data.json';
+            a.click();
+
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</head>
+<body>
+    <h1>De Lijn Realtime Data</h1>
+    <button onclick="fetchRealtimeData()">Download JSON</button>
+</body>
+</html>

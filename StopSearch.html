@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>De Lijn - Doorkomsten</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        table {
+            width: 50%;
+            border-collapse: collapse;
+            margin: 20px auto;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        th {
+            background-color: #f4f4f4;
+            cursor: pointer;
+            position: relative;
+        }
+        th .arrow {
+            font-size: 12px;
+            margin-left: 5px;
+        }
+        #halteKnoppen {
+            text-align: center;
+            margin: 20px;
+        }
+        .halteKnop {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            background-color: #007BFF;
+            color: white;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        .halteKnop:hover {
+            background-color: #0056b3;
+        }
+        #halteZoekInput {
+            width: 50%;
+            margin: 20px auto;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+<h1 style="text-align: center;">Doorkomsten De Lijn</h1>
+
+<div style="text-align: center;">
+    <input type="text" id="halteZoekInput" placeholder="Voer haltenaam in...">
+    <button id="zoekHalteButton">Zoek Halte</button>
+</div>
+
+<div id="halteKnoppen"></div>
+
+<table id="departureTable">
+    <thead>
+        <tr>
+            <th onclick="sortTable(0)">Lijnnummer<span class="arrow" id="arrow0"></span></th>
+            <th onclick="sortTable(1)">Bestemming<span class="arrow" id="arrow1"></span></th>
+            <th onclick="sortTable(2)">Voertuig<span class="arrow" id="arrow2"></span></th>
+            <th onclick="sortTable(3)">Aankomsttijd (minuten)<span class="arrow" id="arrow3"></span></th>
+        </tr>
+    </thead>
+    <tbody>
+        <!-- De vertrektijden zullen hier worden ingevoegd -->
+    </tbody>
+</table>
+
+<script>
+    let currentSortColumn = null;
+    let ascending = true;
+
+    // Kleurcodes mapping object
+    const DLKleuren = {
+        "TU": "#0099AA",
+        "RZ": "#FF88AA",
+        "OR": "#EE8822",
+        "RO": "#BB0022",
+        "PA": "#991199",
+        "MA": "#DD0077",
+        "LB": "#AACCEE",
+        "GE": "#FFCC11",
+        "GR": "#229922",
+        "MU": "#77CCAA",
+        "KA": "#995511",
+        "BL": "#1199DD",
+        "ZA": "#FFCCAA",
+        "BO": "#771133",
+        "KI": "#444411",
+        "DB": "#0044BB",
+        "LG": "#BBDD00",
+        "PE": "#005555",
+        "ST": "#8899AA",
+        "WI": "#FFFFFF",
+        "GD": "#FFDD00",
+        "ZW": "#000000",
+        "CR": "#C5AA77"
+    };
+
+    // Functie om lijnkleuren op te halen
+    function fetchLineColors(entiteitNummer, lijnNummer) {
+        return fetch(`https://api.delijn.be/DLKernOpenData/api/v1/lijnen/${entiteitNummer}/${lijnNummer}/lijnkleuren`, {
+            method: 'GET',
+            headers: {
+                'Cache-Control': 'no-cache',
+                'Ocp-Apim-Subscription-Key': 'ee23ac060f8a4038ad6d69358d85a1b0',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            const achtergrondCode = data.achtergrond?.code;
+            const voorgrondCode = data.voorgrond?.code;
+            const background = DLKleuren[achtergrondCode] || "#FFFFFF";
+            const text = DLKleuren[voorgrondCode] || "#000000";
+            return {
+                background,
+                text
+            };
+        })
+        .catch(error => {
+            console.error('Error fetching line colors:', error);
+            return { background: '#FFFFFF', text: '#000000' }; // Default colors
+        });
+    }
+
+    // Functie om het verschil in minuten te berekenen
+    function calculateMinutesUntilArrival(vertrekTijd) {
+        const currentTime = new Date();
+        const departureTime = new Date(vertrekTijd);
+        const differenceInMs = departureTime - currentTime;
+        return Math.floor(differenceInMs / 60000);
+    }
+
+    // Functie om de vertrektijden voor een bepaalde halte op te halen
+    function fetchDepartureTimes(halteId) {
+        return fetch(`https://api.delijn.be/DLKernOpenData/api/v1/haltes/3/${halteId}/real-time?maxAantalDoorkomsten=15`, {
+            method: 'GET',
+            headers: {
+                'Cache-Control': 'no-cache',
+                'Ocp-Apim-Subscription-Key': 'ee23ac060f8a4038ad6d69358d85a1b0',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('API response for halteId:', halteId, data); // Debugging
+            if (data.halteDoorkomsten && data.halteDoorkomsten.length > 0 && data.halteDoorkomsten[0].doorkomsten) {
+                return data.halteDoorkomsten[0].doorkomsten;
+            } else {
+                console.warn(`Geen doorkomsten gevonden voor halte ID: ${halteId}`);
+                return []; // Geen doorkomsten gevonden
+            }
+        })
+        .catch(error => {
+            console.error(`Error fetching departure times for halte ID ${halteId}:`, error);
+            return []; // Geef ook hier een lege array terug bij fouten
+        });
+    }
+
+    // Functie om haltes te zoeken op basis van de invoer
+    function zoekHalte() {
+        const zoekTerm = document.getElementById('halteZoekInput').value.trim();
+        if (zoekTerm.length === 0) {
+            alert("Voer een haltenaam in.");
+            return;
+        }
+        fetch(`https://api.delijn.be/DLZoekOpenData/v1/zoek/haltes/${encodeURIComponent(zoekTerm)}?startIndex=0&maxAantalHits=20`, {
+            method: 'GET',
+            headers: {
+                'Cache-Control': 'no-cache',
+                'Ocp-Apim-Subscription-Key': 'ee23ac060f8a4038ad6d69358d85a1b0',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            const halteKnoppen = document.getElementById('halteKnoppen');
+            halteKnoppen.innerHTML = ''; // Maak de knoppen leeg
+
+            // Maak een object om haltes met dezelfde naam te groeperen
+            const uniekeHaltes = {};
+
+            data.haltes.forEach(halte => {
+                const baseOmschrijving = halte.omschrijving.replace(/ perron \S*$/, '');
+                if (!uniekeHaltes[baseOmschrijving]) {
+                    uniekeHaltes[baseOmschrijving] = {
+                        haltes: [] // Sla haltes op zonder perronnummers
+                    };
+                }
+                uniekeHaltes[baseOmschrijving].haltes.push(halte);
+            });
+
+            // Controleer of er haltes zijn gevonden
+            if (Object.keys(uniekeHaltes).length === 0) {
+                alert("Geen haltes gevonden voor de ingevoerde naam.");
+                return;
+            }
+
+            // Maak knoppen voor elke unieke halte
+            for (const omschrijving in uniekeHaltes) {
+                const button = document.createElement('button');
+                button.classList.add('halteKnop');
+                button.textContent = omschrijving; // gebruik de omschrijving als weergave
+                button.addEventListener('click', () => {
+                    const haltIds = uniekeHaltes[omschrijving].haltes.map(h => h.haltenummer);
+                    const vertrektijdenPromises = haltIds.map(id => fetchDepartureTimes(id));
+
+                    Promise.all(vertrektijdenPromises).then(results => {
+                        const allDepartures = results.flat(); // Combineer alle vertrektijden in één array
+                        console.log('All Departures:', allDepartures); // Debugging
+                        const tableBody = document.querySelector('#departureTable tbody');
+                        tableBody.innerHTML = '';
+
+                        if (allDepartures.length === 0) {
+                            const noDataRow = document.createElement('tr');
+                            const noDataCell = document.createElement('td');
+                            noDataCell.colSpan = 4;
+                            noDataCell.textContent = "Geen vertrektijden gevonden voor deze halte.";
+                            noDataRow.appendChild(noDataCell);
+                            tableBody.appendChild(noDataRow);
+                            return;
+                        }
+
+                        // Haal lijnkleuren op voor elke lijn in de vertrektijden
+                        const colorPromises = allDepartures.map(departure => 
+                            fetchLineColors(departure.entiteitnummer, departure.lijnnummer).then(color => {
+                                departure.color = color;
+                            })
+                        );
+
+                        Promise.all(colorPromises).then(() => {
+                            // Sorteer vertrektijden
+                            allDepartures.sort((a, b) => {
+                                return calculateMinutesUntilArrival(a['real-timeTijdstip']) - calculateMinutesUntilArrival(b['real-timeTijdstip']);
+                            });
+
+                            // Voeg vertrektijden toe aan de tabel
+                            allDepartures.forEach(departure => {
+                                const row = document.createElement('tr');
+                                const lijnnummer = document.createElement('td');
+                                const bestemming = document.createElement('td');
+                                const vrtnum = document.createElement('td');
+                                const vertrektijd = document.createElement('td');
+
+                                lijnnummer.textContent = departure.lijnnummer;
+                                bestemming.textContent = departure.bestemming;
+                                vrtnum.textContent = departure.vrtnum;
+                                vrtnum.style.cursor = 'pointer'; // Wijzig de cursor om aan te geven dat het klikbaar is
+                                vrtnum.onclick = () => {
+                                        // Open de nieuwe tab met de URL en het voertuignummer
+                                    window.open(`https://track.haltelink.be/delijn.html?vtnum=${departure.vrtnum}`, '_blank');
+                                };
+
+                                const colors = departure.color;
+                                row.style.backgroundColor = colors.background;
+                                lijnnummer.style.color = colors.text;
+                                bestemming.style.color = colors.text;
+                                vrtnum.style.color = colors.text;
+                                vertrektijd.style.color = colors.text;
+
+                                const minutes = calculateMinutesUntilArrival(departure['real-timeTijdstip']);
+                                vertrektijd.textContent = minutes > 0 ? `${minutes} min` : 'Geen info';
+
+                                row.appendChild(lijnnummer);
+                                row.appendChild(bestemming);
+                                row.appendChild(vrtnum);
+                                row.appendChild(vertrektijd);
+                                tableBody.appendChild(row);
+                            });
+
+                            // Automatisch sorteren op aankomsttijd (kolom 3)
+                            sortTable(3);
+                        });
+                    })
+                    .catch(err => {
+                        console.error('Error:', err);
+                        alert("Er is een fout opgetreden bij het ophalen van vertrektijden.");
+                    });
+                });
+                halteKnoppen.appendChild(button);
+            }
+        })
+        .catch(err => {
+            console.error('Error bij het zoeken van haltes:', err);
+            alert("Er is een fout opgetreden bij het zoeken van haltes.");
+        });
+    }
+
+    document.getElementById('zoekHalteButton').addEventListener('click', zoekHalte);
+
+    // Sorteer functie voor de tabel
+    function sortTable(columnIndex) {
+        const table = document.getElementById("departureTable");
+        const tbody = table.tBodies[0];
+        const rows = Array.from(tbody.rows);
+        
+        // Reset pijltjes
+        for (let i = 0; i < table.tHead.rows[0].cells.length; i++) {
+            const arrow = document.getElementById(`arrow${i}`);
+            if (arrow) arrow.textContent = '';
+        }
+
+        // Bepaal de sorteervolgorde
+        if (currentSortColumn === columnIndex) {
+            ascending = !ascending;
+        } else {
+            ascending = true;
+        }
+        currentSortColumn = columnIndex;
+
+        // Pijltjes omhoog of omlaag
+        const arrow = ascending ? '▲' : '▼';
+        const arrowElement = document.getElementById(`arrow${columnIndex}`);
+        if (arrowElement) {
+            arrowElement.textContent = arrow;
+        }
+
+        // Sorteren op de geselecteerde kolom
+        rows.sort((a, b) => {
+            const cellA = a.cells[columnIndex].textContent.trim();
+            const cellB = b.cells[columnIndex].textContent.trim();
+            const isNumeric = !isNaN(cellA) && !isNaN(cellB);
+            
+            if (isNumeric) {
+                return ascending ? (parseInt(cellA) - parseInt(cellB)) : (parseInt(cellB) - parseInt(cellA));
+            } else {
+                return ascending ? cellA.localeCompare(cellB) : cellB.localeCompare(cellA);
+            }
+        });
+
+        // De gesorteerde rijen opnieuw in de tabel plaatsen
+        rows.forEach(row => tbody.appendChild(row));
+    }
+</script>
+
+</body>
+</html>

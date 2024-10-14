@@ -248,6 +248,7 @@
                                 const bestemming = document.createElement('td');
                                 const vrtnum = document.createElement('td');
                                 const vertrektijd = document.createElement('td');
+                                const status = document.createElement('td');
 
                                 lijnnummer.textContent = departure.lijnnummer;
                                 bestemming.textContent = departure.bestemming;
@@ -264,9 +265,10 @@
                                 bestemming.style.color = colors.text;
                                 vrtnum.style.color = colors.text;
                                 vertrektijd.style.color = colors.text;
+                                status.style.color = colors.text;
 
                                 const minutes = calculateMinutesUntilArrival(departure['real-timeTijdstip']);
-                                vertrektijd.textContent = minutes > 0 ? `${minutes} min` : 'Geen info';
+                                vertrektijd.textContent = minutes > 0 ? `${minutes}` : 'Geen info';
 
                                 row.appendChild(lijnnummer);
                                 row.appendChild(bestemming);

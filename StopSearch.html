@@ -6,20 +6,28 @@
     <title>De Lijn - Doorkomsten</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f9f9f9;
+            color: #333
         }
         table {
             width: 50%;
-            border-collapse: collapse;
-            margin: 20px auto;
+            border-collapse: separate;
+            margin: 30px auto;
+            border-spacing: 0;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
         }
         th, td {
-            padding: 10px;
+            padding: 15px;
             border: 1px solid #ddd;
             text-align: left;
         }
         th {
-            background-color: #f4f4f4;
+            background-color: #007BFF;
+            color: white;
+            font-weight: 500;
             cursor: pointer;
             position: relative;
         }
@@ -32,13 +40,15 @@
             margin: 20px;
         }
         .halteKnop {
-            padding: 10px 20px;
-            margin: 5px;
-            border: none;
             background-color: #007BFF;
+            border: none;
             color: white;
+            padding: 10px 20px;
+            margin: 10px;
+            border-radius: 25px;
+            font-size: 1em;
             cursor: pointer;
-            border-radius: 5px;
+            transition: background-color 0.3s;
         }
         .halteKnop:hover {
             background-color: #0056b3;

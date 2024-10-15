@@ -412,33 +412,33 @@
         rows.forEach(row => tbody.appendChild(row));
     }
 
-  function getHalteIdFromUrl() {
-    const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get('halteId');
-}
-
-function fetchDepartureTimes() {
-    const halteId = getHalteIdFromUrl();
-    if (halteId) {
-        // API-aanroep met de opgehaalde halte-ID
-        fetch(`https://api.delijn.be/DLKernOpenData/api/v1/haltes/3/${halteId}/real-time?maxAantalDoorkomsten=15`, {
-            method: 'GET',
-            headers: {
-                'Cache-Control': 'no-cache',
-                'Ocp-Apim-Subscription-Key': 'ee23ac060f8a4038ad6d69358d85a1b0',
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            // Update de pagina met de opgehaalde gegevens
-        })
-        .catch(error => console.error('Error fetching departure times:', error));
-    } else {
-        alert('Geen halte-ID gevonden in de URL.');
+    function getHalteIdFromUrl() {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get('halteId');
     }
-}
 
-document.addEventListener('DOMContentLoaded', fetchDepartureTimes);
+    function fetchDepartureTimes() {
+        const halteId = getHalteIdFromUrl();
+        if (halteId) {
+            // API-aanroep met de opgehaalde halte-ID
+            fetch(`https://api.delijn.be/DLKernOpenData/api/v1/haltes/3/${halteId}/real-time?maxAantalDoorkomsten=15`, {
+                method: 'GET',
+                headers: {
+                    'Cache-Control': 'no-cache',
+                    'Ocp-Apim-Subscription-Key': 'ee23ac060f8a4038ad6d69358d85a1b0',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Update de pagina met de opgehaalde gegevens
+            })
+            .catch(error => console.error('Error fetching departure times:', error));
+        } else {
+            alert('Geen halte-ID gevonden in de URL.');
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', fetchDepartureTimes);
 
 
 </script>

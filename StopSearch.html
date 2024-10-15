@@ -11,10 +11,10 @@
             color: #333
         }
         table {
-            width: 50%;
+            width: 60%;
             border-collapse: separate;
             margin: 30px auto;
-            border-spacing: 0;
+            border-spacing: 1;
             border-radius: 10px;
             overflow: hidden;
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
@@ -23,14 +23,42 @@
             padding: 15px;
             border: 1px solid #ddd;
             text-align: left;
+            font-size: larger;
+            font-weight: 600;
         }
         th {
-            background-color: #007BFF;
+            background-color: #0155af;
             color: white;
+            font-size: large;
             font-weight: 500;
             cursor: pointer;
             position: relative;
         }
+
+        @media (max-width: 600px) {
+            table {
+                width: 100%;
+            }
+            #halteZoekInput {
+                width: 80%;
+            }
+        }
+
+        .dark-mode {
+            background-color: #222;
+            color: #fff;
+        }
+
+
+        td:nth-child(1) {
+            text-align: center;
+            font-size: large;
+        }
+
+        td:nth-child(3) {
+            text-decoration: underline;
+        }
+
         th .arrow {
             font-size: 12px;
             margin-left: 5px;
@@ -62,19 +90,20 @@
             border: 1px solid black;
             padding: 15px 20px;
             margin: 10px;
+            font-size: larger;
             border-radius: 15px;
-            width: 50%;
+            width: 40%;
             margin: 20px auto;
             display: block;
         }
 
         button#zoekHalteButton {
-            background-color: #175b27;
+            background-color: #0e7326;
             color: white;
             border: none;
             padding: 12px 20px;
             border-radius: 25px;
-            font-size: 1em;
+            font-size: larger;
             cursor: pointer;
             transition: transform 0.2s ease, background-color 0.3s ease;
         }
@@ -88,7 +117,7 @@
 <body>
 
 <h1 style="text-align: center;">Doorkomsten De Lijn</h1>
-<h5 style="text-align: center;">Tip: Klik op een voertuignummer om naar de Haltelink-trackerpagina te gaan.<h5>
+<h5 style="text-align: center;">Tip: Klik op een voertuignummer om naar de Haltelink-trackerpagina te gaan.<h5>    
 
 <div style="text-align: center;">
     <input type="text" id="halteZoekInput" placeholder="Voer haltenaam in...">
@@ -100,10 +129,10 @@
 <table id="departureTable">
     <thead>
         <tr>
-            <th onclick="sortTable(0)">Lijnnummer<span class="arrow" id="arrow0"></span></th>
-            <th onclick="sortTable(1)">Bestemming<span class="arrow" id="arrow1"></span></th>
-            <th onclick="sortTable(2)">Voertuig<span class="arrow" id="arrow2"></span></th>
-            <th onclick="sortTable(3)">Aankomsttijd (minuten)<span class="arrow" id="arrow3"></span></th>
+            <th style="width: 15%;" onclick="sortTable(0)">Lijn<span class="arrow" id="arrow0"></span></th>
+            <th style="width: 45%;" onclick="sortTable(1)">Bestemming<span class="arrow" id="arrow1"></span></th>
+            <th style="width: 20%;" onclick="sortTable(2)">Voertuig<span class="arrow" id="arrow2"></span></th>
+            <th style="width: 20%;" onclick="sortTable(3)">Aankomst<span class="arrow" id="arrow3"></span></th>
         </tr>
     </thead>
     <tbody>
@@ -168,6 +197,11 @@
             return { background: '#FFFFFF', text: '#000000' }; // Default colors
         });
     }
+
+    function toggleDarkMode() {
+        document.body.classList.toggle('dark-mode');
+    }  
+
 
     // Functie om het verschil in minuten te berekenen
     function calculateMinutesUntilArrival(vertrekTijd) {
@@ -377,6 +411,7 @@
         // De gesorteerde rijen opnieuw in de tabel plaatsen
         rows.forEach(row => tbody.appendChild(row));
     }
+
 </script>
 
 </body>

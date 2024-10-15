@@ -54,15 +54,37 @@
             background-color: #0056b3;
         }
         #halteZoekInput {
+            background-color: lightgoldenrodyellow;
+            color:#000000;
+            border: 1px solid black;
+            padding: 15px 20px;
+            margin: 10px;
+            border-radius: 15px;
             width: 50%;
             margin: 20px auto;
             display: block;
+        }
+
+        button#zoekHalteButton {
+            background-color: #175b27;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button#zoekHalteButton:hover {
+            background-color: #145122;
         }
     </style>
 </head>
 <body>
 
 <h1 style="text-align: center;">Doorkomsten De Lijn</h1>
+<h5 style="text-align: center;">Tip: Klik op een voertuignummer om naar de Haltelink-trackerpagina te gaan.<h5>
 
 <div style="text-align: center;">
     <input type="text" id="halteZoekInput" placeholder="Voer haltenaam in...">

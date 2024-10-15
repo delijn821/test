@@ -10,7 +10,6 @@
             background-color: #eef6ff;
             color: #333
         }
-
         
         table {
             width: 60%;
@@ -45,12 +44,6 @@
                 width: 80%;
             }
         }
-
-        .dark-mode {
-            background-color: #222;
-            color: #fff;
-        }
-
 
         td:nth-child(1) {
             text-align: center;
@@ -191,42 +184,12 @@
         });
     }
 
-    //function toggleDarkMode() {
-    //    document.body.classList.toggle('dark-mode');
-    //}  
-
-
     // Functie om het verschil in minuten te berekenen
     function calculateMinutesUntilArrival(vertrekTijd) {
         const currentTime = new Date();
         const departureTime = new Date(vertrekTijd);
         const differenceInMs = departureTime - currentTime;
         return Math.floor(differenceInMs / 60000);
-    }
-
-    // Functie om de vertrektijden voor een bepaalde halte op te halen
-    function fetchDepartureTimes(halteId) {
-        return fetch(`https://api.delijn.be/DLKernOpenData/api/v1/haltes/3/${halteId}/real-time?maxAantalDoorkomsten=15`, {
-            method: 'GET',
-            headers: {
-                'Cache-Control': 'no-cache',
-                'Ocp-Apim-Subscription-Key': 'ee23ac060f8a4038ad6d69358d85a1b0',
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            console.log('API response for halteId:', halteId, data); // Debugging
-            if (data.halteDoorkomsten && data.halteDoorkomsten.length > 0 && data.halteDoorkomsten[0].doorkomsten) {
-                return data.halteDoorkomsten[0].doorkomsten;
-            } else {
-                console.warn(`Geen doorkomsten gevonden voor halte ID: ${halteId}`);
-                return []; // Geen doorkomsten gevonden
-            }
-        })
-        .catch(error => {
-            console.error(`Error fetching departure times for halte ID ${halteId}:`, error);
-            return []; // Geef ook hier een lege array terug bij fouten
-        });
     }
 
     // Functie om haltes te zoeken op basis van de invoer
@@ -310,24 +273,16 @@
                                 const row = document.createElement('tr');
                                 const lijnnummer = document.createElement('td');
                                 const bestemming = document.createElement('td');
-//                                const vrtnum = document.createElement('td');
                                 const vertrektijd = document.createElement('td');
                                 const status = document.createElement('td');
 
                                 lijnnummer.textContent = departure.lijnnummer;
                                 bestemming.textContent = departure.bestemming;
-//                                vrtnum.textContent = departure.vrtnum;
-//                                vrtnum.style.cursor = 'pointer'; // Wijzig de cursor om aan te geven dat het klikbaar is
-//                                vrtnum.onclick = () => {
-                                        // Open de nieuwe tab met de URL en het voertuignummer
-//                                    window.open(`https://track.haltelink.be/delijn.html?vtnum=${departure.vrtnum}`, '_blank');
-//                                };
 
                                 const colors = departure.color;
                                 row.style.backgroundColor = colors.background;
                                 lijnnummer.style.color = colors.text;
                                 bestemming.style.color = colors.text;
-//                                vrtnum.style.color = colors.text;
                                 vertrektijd.style.color = colors.text;
                                 status.style.color = colors.text;
 
@@ -336,7 +291,6 @@
 
                                 row.appendChild(lijnnummer);
                                 row.appendChild(bestemming);
-//                                row.appendChild(vrtnum);
                                 row.appendChild(vertrektijd);
                                 tableBody.appendChild(row);
                             });
@@ -458,18 +412,15 @@ function displayDepartureTimes(allDepartures) {
             const row = document.createElement('tr');
             const lijnnummer = document.createElement('td');
             const bestemming = document.createElement('td');
-//            const vrtnum = document.createElement('0');
             const vertrektijd = document.createElement('td');
 
             lijnnummer.textContent = departure.lijnnummer;
             bestemming.textContent = departure.bestemming;
-//            vrtnum.textContent = departure.vrtnum;
 
             const colors = departure.color || { background: '#FFFFFF', text: '#000000' }; // Default kleuren als er geen zijn
             row.style.backgroundColor = colors.background;
             lijnnummer.style.color = colors.text;
             bestemming.style.color = colors.text;
-//            vrtnum.style.color = colors.text;
             vertrektijd.style.color = colors.text;
 
             const minutes = calculateMinutesUntilArrival(departure['real-timeTijdstip']);
@@ -477,7 +428,6 @@ function displayDepartureTimes(allDepartures) {
 
             row.appendChild(lijnnummer);
             row.appendChild(bestemming);
-//            row.appendChild(vrtnum);
             row.appendChild(vertrektijd);
             tableBody.appendChild(row);
         });
